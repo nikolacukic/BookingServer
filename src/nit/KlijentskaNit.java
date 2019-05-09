@@ -48,8 +48,6 @@ public class KlijentskaNit extends Thread {
         while (!isInterrupted()) {
             ObjectInputStream inSocket = new ObjectInputStream(soket.getInputStream());
             Zahtev zahtev = (Zahtev) inSocket.readObject();
-
-            System.err.println(((Klijent) zahtev.getPodaci()).getKorisnickoIme());
             Odgovor odgovor = new Odgovor();
             try {
                 int operacija = zahtev.getOperacija();
@@ -68,19 +66,26 @@ public class KlijentskaNit extends Thread {
                             odgovor.setPodaci(vlasnik);
                             break;
                         }
-                    /*case Operacije.REGISTRACIJA:
-                        List<GeneralEntity> manufacturers = Controler.getInstance().getAllManufacturers();
-                        odgovor.setStatus(ResponseStatus.OK);
-                        odgovor.setData(manufacturers);
-                        break;
-                    case Operacije.OPERATION_GET_ALL_PRODUCTS:
+                    case Operacije.REGISTRACIJA:
+                        Korisnik novi = (Korisnik) zahtev.getPodaci();
+                        if (novi instanceof Klijent) {
+                            GeneralEntity klijent = Kontroler.getInstance().registrujK((Klijent) novi);
+                            odgovor.setStatus(StatusOdgovora.OK);
+                            odgovor.setPodaci(klijent);
+                            break;
+                        } else {
+                            GeneralEntity vlasnik = Kontroler.getInstance().registrujV((VlasnikSmestaja) novi);
+                            odgovor.setStatus(StatusOdgovora.OK);
+                            odgovor.setPodaci(vlasnik);
+                            break;
+                        }
+                    /*case Operacije.OPERATION_GET_ALL_PRODUCTS:
                         List<Product> products = Controler.getInstance().getAllProducts();
                         odgovor.setStatus(ResponseStatus.OK);
                         odgovor.setData(products);*/
                 }
 
             } catch (Exception ex) {
-                ex.printStackTrace();
                 odgovor.setStatus(StatusOdgovora.ERROR);
                 odgovor.setError(ex);
             }

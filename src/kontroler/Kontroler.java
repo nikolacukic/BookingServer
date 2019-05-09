@@ -6,11 +6,14 @@
 package kontroler;
 
 import domain.GeneralEntity;
+import domain.Klijent;
 import domain.Korisnik;
 import domain.VlasnikSmestaja;
 import so.ApstraktnaGenerickaOperacija;
 import so.login.LoginKSO;
 import so.login.LoginVSO;
+import so.registracija.RegistracijaKSO;
+import so.registracija.RegistracijaVSO;
 
 /**
  *
@@ -35,10 +38,22 @@ public class Kontroler {
         so.sablonIzvrsi(k);
         return ((LoginKSO) so).getKlijent();
     }
-    
+
     public GeneralEntity loginV(VlasnikSmestaja v) throws Exception {
         ApstraktnaGenerickaOperacija so = new LoginVSO();
         so.sablonIzvrsi(v);
         return ((LoginVSO) so).getVlasnik();
+    }
+
+    public GeneralEntity registrujK(Klijent k) throws Exception {
+        ApstraktnaGenerickaOperacija so = new RegistracijaKSO();
+        so.sablonIzvrsi(k);
+        return ((RegistracijaKSO) so).getKlijent();
+    }
+
+    public GeneralEntity registrujV(VlasnikSmestaja v) throws Exception {
+        ApstraktnaGenerickaOperacija so = new RegistracijaVSO();
+        so.sablonIzvrsi(v);
+        return ((RegistracijaVSO) so).getVlasnik();
     }
 }

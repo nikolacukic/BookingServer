@@ -16,4 +16,5 @@ public interface IDatabaseBroker {
     
     List<GeneralEntity> getAll(GeneralEntity entity) throws Exception;
     GeneralEntity login(GeneralEntity entity) throws Exception;
+    GeneralEntity registracija(GeneralEntity entity) throws Exception;
 }
