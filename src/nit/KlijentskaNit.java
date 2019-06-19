@@ -8,13 +8,13 @@ package nit;
 import domain.GeneralEntity;
 import domain.Klijent;
 import domain.Korisnik;
+import domain.Smestaj;
 import domain.VlasnikSmestaja;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 import kontroler.Kontroler;
 import transfer.Odgovor;
 import transfer.Zahtev;
@@ -79,6 +79,29 @@ public class KlijentskaNit extends Thread {
                             odgovor.setPodaci(vlasnik);
                             break;
                         }
+                    case Operacije.SMESTAJ_KREIRANJE:
+                        Smestaj s = (Smestaj) zahtev.getPodaci();
+                        GeneralEntity smestaj = Kontroler.getInstance().kreirajSmestaj(s);
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(smestaj);
+                        break;
+                    case Operacije.SMESTAJ_UCITAVANJE:
+                        List<Smestaj> smestaji = Kontroler.getInstance().vratiSveSmestaje((String) zahtev.getPodaci());
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(smestaji);
+                        break;
+                    case Operacije.SMESTAJ_IZMENA:
+                        Smestaj izmenjen = (Smestaj) zahtev.getPodaci();
+                        GeneralEntity nov = Kontroler.getInstance().izmeniSmestaj(izmenjen);
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(nov);
+                        break;
+                    case Operacije.SMESTAJ_BRISANJE:
+                        Smestaj za_brisanje = (Smestaj) zahtev.getPodaci();
+                        GeneralEntity deleted = Kontroler.getInstance().obrisiSmestaj(za_brisanje);
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(deleted);
+                        break;
                     /*case Operacije.OPERATION_GET_ALL_PRODUCTS:
                         List<Product> products = Controler.getInstance().getAllProducts();
                         odgovor.setStatus(ResponseStatus.OK);

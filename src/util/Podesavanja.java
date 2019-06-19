@@ -37,4 +37,8 @@ public class Podesavanja {
     public String getProperty(String key) {
         return props.getProperty(key, "n/a");
     }
+    
+    public void setProperty(String key, String val) {
+        props.setProperty(key, val);
+    }
 }

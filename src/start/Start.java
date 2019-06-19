@@ -5,6 +5,7 @@
  */
 package start;
 
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,24 +17,26 @@ import util.Podesavanja;
  * @author user
  */
 public class Start {
+    
+    boolean aktivan = true;
+    
+    /*public static void main(String[] args){
+        JFrame frm = new FormServer();
+        frm.setVisible(true);
+    }*/
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        new Start().startServer();
+    }
 
-    private boolean aktivan = true;
-
+    
     public void startServer() throws IOException, ClassNotFoundException {
         ServerSocket ss = new ServerSocket(Integer.parseInt(Podesavanja.getInstance().getProperty("port")));
-        System.out.println("Server je pokrenut");
         while (aktivan) {
             Socket socket = ss.accept();
             System.out.println("Povezan");
             KlijentskaNit clientThread = new KlijentskaNit(socket);
             clientThread.start();
         }
-
     }
-
-    
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
-        new Start().startServer();
-    }
-
 }
+
