@@ -17,6 +17,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import kontroler.Kontroler;
 import transfer.Odgovor;
 import transfer.Zahtev;
@@ -142,4 +144,20 @@ public class KlijentskaNit extends Thread {
         outSocket.writeObject(odgovor);
     }
 
+    public void saljiKraj() {
+        ObjectOutputStream out = null;
+        try {
+            out = new ObjectOutputStream(soket.getOutputStream());
+            out.writeObject(new Zahtev(Operacije.GASENJE, null));
+        } catch (IOException ex) {
+            Logger.getLogger(KlijentskaNit.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                out.close();
+            } catch (IOException ex) {
+                Logger.getLogger(KlijentskaNit.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
 }

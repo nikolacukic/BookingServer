@@ -7,13 +7,10 @@ package gui;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import nit.KlijentskaNit;
+import nit.ServerskaNit;
 import util.Podesavanja;
 
 /**
@@ -23,7 +20,7 @@ import util.Podesavanja;
 public class FormServer extends javax.swing.JFrame {
 
     private boolean aktivan = true;
-    LinkedList<KlijentskaNit> listaKorisnika;
+    private ServerskaNit nit;
 
     /**
      * Creates new form FormServer
@@ -31,6 +28,7 @@ public class FormServer extends javax.swing.JFrame {
     public FormServer() {
         initComponents();
         pripremi();
+        setLocationRelativeTo(null);
     }
 
     /**
@@ -190,7 +188,13 @@ public class FormServer extends javax.swing.JFrame {
     }//GEN-LAST:event_btnStartActionPerformed
 
     private void btnStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnStopActionPerformed
-        zaustavi();
+        nit.stopServer();
+        lblStatus.setText("Server nije pokrenut.");
+        lblStatus.setForeground(Color.red);
+        if (nit != null) {
+            nit.sendShutDownMessage();
+        }
+        omoguci();
     }//GEN-LAST:event_btnStopActionPerformed
 
     private void btnSacuvajActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSacuvajActionPerformed
@@ -224,21 +228,12 @@ public class FormServer extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     public void startServer() throws IOException, ClassNotFoundException {
-        ServerSocket ss = new ServerSocket(Integer.parseInt(Podesavanja.getInstance().getProperty("port")));
+
+        nit = new ServerskaNit();
+        nit.start();
         onemoguci();
         lblStatus.setText("Server je pokrenut");
         lblStatus.setForeground(Color.GREEN);
-        while (aktivan) {
-            Socket socket = ss.accept();
-            System.out.println("Povezan");
-            KlijentskaNit clientThread = new KlijentskaNit(socket);
-            clientThread.start();
-        }
-        //posalji svim klijentima da se gase
-        lblStatus.setText("Server nije pokrenut.");
-        lblStatus.setForeground(Color.red);
-        ss.close();
-        omoguci();
     }
 
     private void pripremi() {
@@ -252,6 +247,7 @@ public class FormServer extends javax.swing.JFrame {
         txtUsername.setText(dbuser);
         txtPassword.setText(dbpassword);
         txtURL.setText(url);
+        btnStop.setEnabled(false);
     }
 
     private void zaustavi() {
@@ -281,6 +277,8 @@ public class FormServer extends javax.swing.JFrame {
         txtURL.setEnabled(false);
         txtPort.setEnabled(false);
         btnSacuvaj.setEnabled(false);
+        btnStart.setEnabled(false);
+        btnStop.setEnabled(true);
     }
 
     private void omoguci() {
@@ -289,6 +287,8 @@ public class FormServer extends javax.swing.JFrame {
         txtURL.setEnabled(true);
         txtPort.setEnabled(true);
         btnSacuvaj.setEnabled(true);
+        btnStart.setEnabled(true);
+        btnStop.setEnabled(false);
     }
 
 }

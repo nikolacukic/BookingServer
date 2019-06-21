@@ -6,9 +6,11 @@
 package start;
 
 
+import gui.FormServer;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import javax.swing.JFrame;
 import nit.KlijentskaNit;
 import util.Podesavanja;
 
@@ -20,11 +22,11 @@ public class Start {
     
     boolean aktivan = true;
     
-    /*public static void main(String[] args){
+    public static void main(String[] args){
         JFrame frm = new FormServer();
         frm.setVisible(true);
-    }*/
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    }
+   /* public static void main(String[] args) throws IOException, ClassNotFoundException {
         new Start().startServer();
     }
 
@@ -37,6 +39,6 @@ public class Start {
             KlijentskaNit clientThread = new KlijentskaNit(socket);
             clientThread.start();
         }
-    }
+    }*/
 }
 
