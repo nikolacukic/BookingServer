@@ -19,6 +19,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import skladiste.IDatabaseBroker;
 import skladiste.baza.konekcija.KonekcijaSaBazom;
 
@@ -60,6 +62,11 @@ public class DatabaseBroker implements IDatabaseBroker {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             entitet = entity.getOne(resultSet);
+            if(entitet instanceof Klijent){
+                Klijent k = (Klijent) entitet;
+                k.setOcene(vratiSveOceneZaKorisnika(k, connection));
+                k.setRezervacije(vratiSveRezZaKorisnika(k, connection));
+            }
             resultSet.close();
             statement.close();
             return entitet;
@@ -140,13 +147,13 @@ public class DatabaseBroker implements IDatabaseBroker {
                     return s;
                 case "rezervacija":
                     Rezervacija r = (Rezervacija) entity;
-                    ps.setString(1, r.getKlijent().getKorisnickoIme());
-                    ps.setLong(2, r.getSmestaj().getSifraSmestaja());
+                    ps.setLong(1, r.getSmestaj().getSifraSmestaja());
+                    ps.setString(2, r.getKlijent().getKorisnickoIme());
                     ps.setDate(3, new java.sql.Date(r.getDatumOd().getTime()));
                     ps.setDate(4, new java.sql.Date(r.getDatumDo().getTime()));
                     ps.setDouble(5, r.getUkupanIznos());
                     ps.executeUpdate();
-
+                    skiniPareSaRacuna(r.getKlijent(), r.getUkupanIznos());
                     return r;
                 case "ocena":
                     Ocena o = (Ocena) entity;
@@ -155,7 +162,7 @@ public class DatabaseBroker implements IDatabaseBroker {
                     ps.setInt(3, o.getOcena());
                     ps.setString(4, o.getOpis());
                     ps.executeUpdate();
-
+                    azurirajProsecnuOcenu(o.getSmestaj());
                     return o;
                 default:
                     return null;
@@ -167,7 +174,28 @@ public class DatabaseBroker implements IDatabaseBroker {
 
     @Override
     public GeneralEntity pronadjiPoId(GeneralEntity entity) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        GeneralEntity entitet;
+        try {
+            Connection connection = KonekcijaSaBazom.getInstance().getConnection();
+            String query;
+            if (entity instanceof Korisnik) {
+                query = "SELECT * FROM " + entity.getTableName() + " WHERE korisnicko_ime='"
+                        + ((Korisnik) entity).getKorisnickoIme() + "'";
+            }
+            else {
+                query = "SELECT * FROM " + entity.getTableName() + " WHERE sifra_smestaja="
+                        + ((Smestaj) entity).getSifraSmestaja();
+            }
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            entitet = entity.getOne(resultSet);
+            resultSet.close();
+            statement.close();
+            return entitet;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            throw ex;
+        }
     }
 
     public List<Smestaj> vratiSveSmestaje(String kriterijum) throws Exception {
@@ -190,8 +218,7 @@ public class DatabaseBroker implements IDatabaseBroker {
             }
             Connection connection = KonekcijaSaBazom.getInstance().getConnection();
             String query = "select s.sifra_smestaja, s.naziv_smestaja, s.cena_prenocista, s.broj_kreveta, s.prosecna_ocena, s.opis,"
-                    + " v.korisnicko_ime as username, v.lozinka as lozinka, v.ime_prezime as imePrezime, v.jmbg as jmbg, v.e_posta as ePosta,"
-                    + " v.broj_lk as brLicne, v.ocena_usluge as ocena, v.kontakt_telefon as telefon "
+                    + " v.korisnicko_ime as username "
                     + "from smestaj s "
                     + "inner join vlasnik_smestaja v on s.vlasnik_id = v.korisnicko_ime " + dodatni;
 
@@ -206,25 +233,77 @@ public class DatabaseBroker implements IDatabaseBroker {
                 String opis = resultSet.getString("opis");
 
                 String username = resultSet.getString("username");
-                String lozinka = resultSet.getString("lozinka");
-                String ime = resultSet.getString("imePrezime");
-                String jmbg = resultSet.getString("jmbg");
-                String ePosta = resultSet.getString("ePosta");
-                String brlk = resultSet.getString("brLicne");
-                double ocenaU = resultSet.getDouble("ocena");
-                String telefon = resultSet.getString("telefon");
-
-                VlasnikSmestaja v = new VlasnikSmestaja(brlk, telefon, ocenaU, username, lozinka, ime, jmbg, ePosta);
-
+                
+                Korisnik k1 = new VlasnikSmestaja();
+                k1.setKorisnickoIme(username);
+                VlasnikSmestaja v = (VlasnikSmestaja) pronadjiPoId(k1);
+                
                 Smestaj s = new Smestaj(id, naziv, kreveti, cena, opis, ocena);
                 s.setVlasnik(v);
-
                 smestaji.add(s);
             }
             resultSet.close();
             statement.close();
 
+            for (Smestaj s : smestaji) {
+                s.setRezervacije(vratiRezZaSmestaj(s, connection));
+                s.setOcene(vratiOceneZaSmestaj(s, connection));
+            }
+
             return smestaji;
+        } catch (Exception ex) {
+            throw ex;
+        }
+    }
+
+    private List<Rezervacija> vratiRezZaSmestaj(Smestaj s, Connection kon) throws Exception {
+        try {
+            Connection connection = kon;
+            List<Rezervacija> rezervacije = new LinkedList<Rezervacija>();
+            String query = "SELECT sifra_smestaja, klijent_id, datum_od, datum_do, ukupan_iznos FROM rezervacija WHERE sifra_smestaja = " + s.getSifraSmestaja();
+            Statement statement = kon.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                String klijent = resultSet.getString("klijent_id");
+                java.util.Date datumOd = new java.util.Date(resultSet.getDate("datum_od").getTime());
+                java.util.Date datumDo = new java.util.Date(resultSet.getDate("datum_do").getTime());
+                double ukupanIznos = resultSet.getDouble("ukupan_iznos");
+                Korisnik k1 = new Klijent();
+                k1.setKorisnickoIme(klijent);
+                Klijent k = (Klijent) pronadjiPoId(k1);
+
+                rezervacije.add(new Rezervacija(s, k, datumOd, datumDo, ukupanIznos));
+            }
+            resultSet.close();
+            statement.close();
+            return rezervacije;
+        } catch (Exception ex) {
+            throw ex;
+        }
+    }
+    
+    private List<Ocena> vratiOceneZaSmestaj(Smestaj s, Connection kon) throws Exception {
+        try {
+            Connection connection = kon;
+            List<Ocena> ocene = new LinkedList<Ocena>();
+            String query = "SELECT smestaj_id, klijent_id, konacna_ocena, opis FROM ocena WHERE smestaj_id = " + s.getSifraSmestaja();
+            Statement statement = kon.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                String klijent = resultSet.getString("klijent_id");
+                int ocena = resultSet.getInt("konacna_ocena");
+                String opis = resultSet.getString("opis");
+                Korisnik k1 = new Klijent();
+                k1.setKorisnickoIme(klijent);
+                Klijent k = (Klijent) pronadjiPoId(k1);
+
+                ocene.add(new Ocena(k, s, ocena, opis));
+            }
+            resultSet.close();
+            statement.close();
+            return ocene;
         } catch (Exception ex) {
             throw ex;
         }
@@ -278,6 +357,94 @@ public class DatabaseBroker implements IDatabaseBroker {
                 }
             }
             return entity;
+        } catch (SQLException ex) {
+            throw ex;
+        }
+    }
+
+    private void skiniPareSaRacuna(Klijent klijent, double iznos) throws Exception{
+        try {
+            Connection connection = KonekcijaSaBazom.getInstance().getConnection();
+            String sql = "UPDATE " + klijent.getTableName() + 
+                    " SET stanje_na_racunu = stanje_na_racunu - " + iznos +
+                    " WHERE korisnicko_ime = '" + klijent.getKorisnickoIme() + "'";
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(sql);
+
+        } catch (SQLException ex) {
+            throw ex;
+        }
+    }
+
+    private List<Ocena> vratiSveOceneZaKorisnika(Klijent k, Connection connection) throws Exception{
+        try {
+            Connection conn = connection;
+            List<Ocena> ocene = new LinkedList<Ocena>();
+            String query = "SELECT smestaj_id, klijent_id, konacna_ocena, opis FROM ocena WHERE klijent_id = '" + k.getKorisnickoIme() + "'";
+            Statement statement = conn.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                long sifra = resultSet.getLong("smestaj_id");
+                int ocena = resultSet.getInt("konacna_ocena");
+                String opis = resultSet.getString("opis");
+                Smestaj s = new Smestaj();
+                s.setSifraSmestaja(sifra);
+                s = (Smestaj) pronadjiPoId(s);
+
+                ocene.add(new Ocena(k, s, ocena, opis));
+            }
+            resultSet.close();
+            statement.close();
+            return ocene;
+        } catch (Exception ex) {
+            throw ex;
+        }
+    }
+
+    private List<Rezervacija> vratiSveRezZaKorisnika(Klijent k, Connection connection) throws Exception{
+        try {
+            Connection conn = connection;
+            List<Rezervacija> rezervacije = new LinkedList<Rezervacija>();
+            String query = "SELECT sifra_smestaja, klijent_id, datum_od, datum_do, ukupan_iznos FROM rezervacija WHERE klijent_id = '" + k.getKorisnickoIme() +"'";
+            Statement statement = conn.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                long sifra = resultSet.getLong("sifra_smestaja");
+                java.util.Date datumOd = new java.util.Date(resultSet.getDate("datum_od").getTime());
+                java.util.Date datumDo = new java.util.Date(resultSet.getDate("datum_do").getTime());
+                double ukupanIznos = resultSet.getDouble("ukupan_iznos");
+                Smestaj s = new Smestaj();
+                s.setSifraSmestaja(sifra);
+                s = (Smestaj) pronadjiPoId(s);
+
+                rezervacije.add(new Rezervacija(s, k, datumOd, datumDo, ukupanIznos));
+            }
+            resultSet.close();
+            statement.close();
+            return rezervacije;
+        } catch (Exception ex) {
+            throw ex;
+        }
+    }
+
+    private void azurirajProsecnuOcenu(Smestaj s) throws Exception {
+        try {
+            Connection kon = KonekcijaSaBazom.getInstance().getConnection();
+            List<Ocena> lista = vratiOceneZaSmestaj(s, kon);
+            int suma = 0;
+            for(Ocena o: lista){
+                suma+=o.getOcena();
+            }
+            double prosek = (double)suma/lista.size();
+            String sql = "UPDATE " + s.getTableName() + 
+                    " SET prosecna_ocena =  " + prosek +
+                    " WHERE sifra_smestaja = " + s.getSifraSmestaja();
+            Statement statement = kon.createStatement();
+            statement.executeUpdate(sql);
+            
+            
         } catch (SQLException ex) {
             throw ex;
         }

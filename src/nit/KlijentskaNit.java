@@ -8,6 +8,8 @@ package nit;
 import domain.GeneralEntity;
 import domain.Klijent;
 import domain.Korisnik;
+import domain.Ocena;
+import domain.Rezervacija;
 import domain.Smestaj;
 import domain.VlasnikSmestaja;
 import java.io.IOException;
@@ -101,6 +103,18 @@ public class KlijentskaNit extends Thread {
                         GeneralEntity deleted = Kontroler.getInstance().obrisiSmestaj(za_brisanje);
                         odgovor.setStatus(StatusOdgovora.OK);
                         odgovor.setPodaci(deleted);
+                        break;
+                    case Operacije.REZERVACIJA_KREIRANJE:
+                        Rezervacija r = (Rezervacija) zahtev.getPodaci();
+                        GeneralEntity rez = Kontroler.getInstance().rezervisi(r);
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(rez);
+                        break;
+                    case Operacije.OCENA_KREIRANJE:
+                        Ocena o = (Ocena) zahtev.getPodaci();
+                        GeneralEntity nova = Kontroler.getInstance().oceni(o);
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(nova);
                         break;
                     /*case Operacije.OPERATION_GET_ALL_PRODUCTS:
                         List<Product> products = Controler.getInstance().getAllProducts();

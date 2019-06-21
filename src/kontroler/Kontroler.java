@@ -8,14 +8,18 @@ package kontroler;
 import domain.GeneralEntity;
 import domain.Klijent;
 import domain.Korisnik;
+import domain.Ocena;
+import domain.Rezervacija;
 import domain.Smestaj;
 import domain.VlasnikSmestaja;
 import java.util.List;
 import so.ApstraktnaGenerickaOperacija;
 import so.login.LoginKSO;
 import so.login.LoginVSO;
+import so.ocena.KreirajOcenuSO;
 import so.registracija.RegistracijaKSO;
 import so.registracija.RegistracijaVSO;
+import so.rezervacija.KreirajRezervacijuSO;
 import so.smestaj.IzmeniSmestajSO;
 import so.smestaj.KreirajSmestajSO;
 import so.smestaj.ObrisiSmestajSO;
@@ -85,5 +89,17 @@ public class Kontroler {
         ApstraktnaGenerickaOperacija so = new ObrisiSmestajSO();
         so.sablonIzvrsi(s);
         return ((ObrisiSmestajSO) so).getSmestaj();
+    }
+
+    public GeneralEntity rezervisi(Rezervacija r) throws Exception {
+        ApstraktnaGenerickaOperacija so = new KreirajRezervacijuSO();
+        so.sablonIzvrsi(r);
+        return ((KreirajRezervacijuSO) so).getRezervacija();
+    }
+
+    public GeneralEntity oceni(Ocena o) throws Exception {
+        ApstraktnaGenerickaOperacija so = new KreirajOcenuSO();
+        so.sablonIzvrsi(o);
+        return ((KreirajOcenuSO) so).getOcena();
     }
 }
