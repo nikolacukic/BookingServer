@@ -17,10 +17,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import skladiste.IDatabaseBroker;
 import skladiste.baza.konekcija.KonekcijaSaBazom;
 
@@ -62,7 +62,7 @@ public class DatabaseBroker implements IDatabaseBroker {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             entitet = entity.getOne(resultSet);
-            if(entitet instanceof Klijent){
+            if (entitet instanceof Klijent) {
                 Klijent k = (Klijent) entitet;
                 k.setOcene(vratiSveOceneZaKorisnika(k, connection));
                 k.setRezervacije(vratiSveRezZaKorisnika(k, connection));
@@ -91,8 +91,7 @@ public class DatabaseBroker implements IDatabaseBroker {
                     ps.setString(3, k.getLozinka());
                     ps.setString(4, k.getJmbg());
                     ps.setString(5, k.getePosta());
-                    ps.setInt(6, k.getBrojOdsedanja());
-                    ps.setDouble(7, k.getStanjeNaRacunu());
+                    ps.setDouble(6, k.getStanjeNaRacunu());
                     ps.executeUpdate();
                     ps.close();
                     return entity;
@@ -106,7 +105,6 @@ public class DatabaseBroker implements IDatabaseBroker {
                     ps.setString(5, v.getePosta());
                     ps.setString(6, v.getBrojLicneKarte());
                     ps.setString(7, v.getKontaktTelefon());
-                    ps.setDouble(8, v.getOcenaUsluge());
                     ps.executeUpdate();
                     ps.close();
                     return entity;
@@ -181,8 +179,7 @@ public class DatabaseBroker implements IDatabaseBroker {
             if (entity instanceof Korisnik) {
                 query = "SELECT * FROM " + entity.getTableName() + " WHERE korisnicko_ime='"
                         + ((Korisnik) entity).getKorisnickoIme() + "'";
-            }
-            else {
+            } else {
                 query = "SELECT * FROM " + entity.getTableName() + " WHERE sifra_smestaja="
                         + ((Smestaj) entity).getSifraSmestaja();
             }
@@ -233,11 +230,11 @@ public class DatabaseBroker implements IDatabaseBroker {
                 String opis = resultSet.getString("opis");
 
                 String username = resultSet.getString("username");
-                
+
                 Korisnik k1 = new VlasnikSmestaja();
                 k1.setKorisnickoIme(username);
                 VlasnikSmestaja v = (VlasnikSmestaja) pronadjiPoId(k1);
-                
+
                 Smestaj s = new Smestaj(id, naziv, kreveti, cena, opis, ocena);
                 s.setVlasnik(v);
                 smestaji.add(s);
@@ -282,7 +279,7 @@ public class DatabaseBroker implements IDatabaseBroker {
             throw ex;
         }
     }
-    
+
     private List<Ocena> vratiOceneZaSmestaj(Smestaj s, Connection kon) throws Exception {
         try {
             Connection connection = kon;
@@ -351,6 +348,13 @@ public class DatabaseBroker implements IDatabaseBroker {
                         statement.executeUpdate(sql);*/
                         break;
                     case "rezervacija":
+                        Rezervacija r = (Rezervacija) entity;
+                        java.sql.Date datum = new java.sql.Date(r.getDatumOd().getTime());
+                        sql = "DELETE FROM " + entity.getTableName() + " WHERE sifra_smestaja = " + r.getSmestaj().getSifraSmestaja()
+                                + " AND klijent_id = '" + r.getKlijent().getKorisnickoIme() + "' AND datum_od = '" + datum + "'";
+                        Statement statement = connection.createStatement();
+                        statement.executeUpdate(sql);
+                        vratiPareNaRacun(r.getKlijent(), r.getUkupanIznos());
                         break;
                     default:
                         break;
@@ -362,12 +366,26 @@ public class DatabaseBroker implements IDatabaseBroker {
         }
     }
 
-    private void skiniPareSaRacuna(Klijent klijent, double iznos) throws Exception{
+    private void skiniPareSaRacuna(Klijent klijent, double iznos) throws Exception {
         try {
             Connection connection = KonekcijaSaBazom.getInstance().getConnection();
-            String sql = "UPDATE " + klijent.getTableName() + 
-                    " SET stanje_na_racunu = stanje_na_racunu - " + iznos +
-                    " WHERE korisnicko_ime = '" + klijent.getKorisnickoIme() + "'";
+            String sql = "UPDATE " + klijent.getTableName()
+                    + " SET stanje_na_racunu = stanje_na_racunu - " + iznos
+                    + " WHERE korisnicko_ime = '" + klijent.getKorisnickoIme() + "'";
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(sql);
+
+        } catch (SQLException ex) {
+            throw ex;
+        }
+    }
+    
+    private void vratiPareNaRacun(Klijent klijent, double iznos) throws Exception {
+        try {
+            Connection connection = KonekcijaSaBazom.getInstance().getConnection();
+            String sql = "UPDATE " + klijent.getTableName()
+                    + " SET stanje_na_racunu = stanje_na_racunu + " + iznos
+                    + " WHERE korisnicko_ime = '" + klijent.getKorisnickoIme() + "'";
             Statement statement = connection.createStatement();
             statement.executeUpdate(sql);
 
@@ -376,7 +394,7 @@ public class DatabaseBroker implements IDatabaseBroker {
         }
     }
 
-    private List<Ocena> vratiSveOceneZaKorisnika(Klijent k, Connection connection) throws Exception{
+    private List<Ocena> vratiSveOceneZaKorisnika(Klijent k, Connection connection) throws Exception {
         try {
             Connection conn = connection;
             List<Ocena> ocene = new LinkedList<Ocena>();
@@ -402,11 +420,11 @@ public class DatabaseBroker implements IDatabaseBroker {
         }
     }
 
-    private List<Rezervacija> vratiSveRezZaKorisnika(Klijent k, Connection connection) throws Exception{
+    private List<Rezervacija> vratiSveRezZaKorisnika(Klijent k, Connection connection) throws Exception {
         try {
             Connection conn = connection;
             List<Rezervacija> rezervacije = new LinkedList<Rezervacija>();
-            String query = "SELECT sifra_smestaja, klijent_id, datum_od, datum_do, ukupan_iznos FROM rezervacija WHERE klijent_id = '" + k.getKorisnickoIme() +"'";
+            String query = "SELECT sifra_smestaja, klijent_id, datum_od, datum_do, ukupan_iznos FROM rezervacija WHERE klijent_id = '" + k.getKorisnickoIme() + "'";
             Statement statement = conn.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
@@ -434,18 +452,118 @@ public class DatabaseBroker implements IDatabaseBroker {
             Connection kon = KonekcijaSaBazom.getInstance().getConnection();
             List<Ocena> lista = vratiOceneZaSmestaj(s, kon);
             int suma = 0;
-            for(Ocena o: lista){
-                suma+=o.getOcena();
+            for (Ocena o : lista) {
+                suma += o.getOcena();
             }
-            double prosek = (double)suma/lista.size();
-            String sql = "UPDATE " + s.getTableName() + 
-                    " SET prosecna_ocena =  " + prosek +
-                    " WHERE sifra_smestaja = " + s.getSifraSmestaja();
+            double prosek = (double) suma / lista.size();
+            String sql = "UPDATE " + s.getTableName()
+                    + " SET prosecna_ocena =  " + prosek
+                    + " WHERE sifra_smestaja = " + s.getSifraSmestaja();
             Statement statement = kon.createStatement();
             statement.executeUpdate(sql);
-            
-            
+
         } catch (SQLException ex) {
+            throw ex;
+        }
+    }
+
+    @Override
+    public List<Rezervacija> vratiSveRezervacije(GeneralEntity entity) throws Exception {
+        List<Rezervacija> rezervacije = new LinkedList<Rezervacija>();
+        try {
+            String dodatni="";
+            Rezervacija dobijena = (Rezervacija) entity;
+            String id_korisnika = dobijena.getKlijent().getKorisnickoIme();
+            //DEO KAD VLASNIK POZIVA
+            if (dobijena.getKlijent().getImePrezime() == null) {
+                //kriterijum je smesten u lozinku
+                //ima i kriterijum i datum
+                if (dobijena.getKlijent().getLozinka() != null && dobijena.getDatumOd() != null) {
+                    String pattern = "yyyy-MM-dd";
+                    String kriterijum = dobijena.getKlijent().getLozinka();
+                    DateFormat df = new SimpleDateFormat(pattern);
+
+                    String datum = df.format(dobijena.getDatumOd());
+                    dodatni = "WHERE s.vlasnik_id = '" + id_korisnika + "' AND r.datum_od <= '" + datum + "' AND r.datum_do >= '" + datum + "' AND s.naziv_smestaja LIKE '%" + kriterijum + "%'";
+                }
+                //ima samo datum
+                else if(dobijena.getKlijent().getLozinka() == null && dobijena.getDatumOd() != null){
+                    String pattern = "yyyy-MM-dd";
+                    DateFormat df = new SimpleDateFormat(pattern);
+
+                    String datum = df.format(dobijena.getDatumOd());
+                    dodatni = "WHERE s.vlasnik_id = '" + id_korisnika + "' AND r.datum_od <= '" + datum + "' AND r.datum_do >= '" + datum + "'";
+                }
+                //ima samo kriterijum
+                else if(dobijena.getKlijent().getLozinka() != null && dobijena.getDatumOd() == null){
+                    String kriterijum = dobijena.getKlijent().getLozinka();
+                    dodatni = "WHERE s.vlasnik_id = '" + id_korisnika + "' AND s.naziv_smestaja LIKE '%" + kriterijum + "%'";
+                }
+                else {
+                    dodatni = "WHERE s.vlasnik_id = '" + id_korisnika + "'";
+                }
+            } else {
+                String lozinka = dobijena.getKlijent().getLozinka();
+                boolean jesteLozinka= lozinka.matches((".*\\d.*"));
+               //DEO KAD KLIJENT POZIVA
+               if ((lozinka != null && !jesteLozinka) && dobijena.getDatumOd() != null) {
+                    String pattern = "yyyy-MM-dd";
+                    String kriterijum = dobijena.getKlijent().getLozinka();
+                    DateFormat df = new SimpleDateFormat(pattern);
+
+                    String datum = df.format(dobijena.getDatumOd());
+                    dodatni = "WHERE r.klijent_id = '" + id_korisnika + "' AND r.datum_od <= '" + datum + "' AND r.datum_do >= '" + datum + "' AND s.naziv_smestaja LIKE '%" + kriterijum + "%'";
+                }
+                //ima samo datum
+                else if((lozinka == null && !jesteLozinka) && dobijena.getDatumOd() != null){
+                    String pattern = "yyyy-MM-dd";
+                    DateFormat df = new SimpleDateFormat(pattern);
+
+                    String datum = df.format(dobijena.getDatumOd());
+                    dodatni = "WHERE r.klijent_id = '" + id_korisnika + "' AND r.datum_od <= '" + datum + "' AND r.datum_do >= '" + datum + "'";
+                }
+                //ima samo kriterijum
+                else if((lozinka != null && !jesteLozinka) && dobijena.getDatumOd() == null){
+                    String kriterijum = dobijena.getKlijent().getLozinka();
+                    dodatni = "WHERE r.klijent_id = '" + id_korisnika + "' AND s.naziv_smestaja LIKE '%" + kriterijum + "%'";
+                }
+                else{
+                    dodatni = "WHERE r.klijent_id = '" + id_korisnika + "'";
+                }
+            }
+
+            Connection connection = KonekcijaSaBazom.getInstance().getConnection();
+            String query = "SELECT s.sifra_smestaja, s.naziv_smestaja, s.vlasnik_id, r.datum_od, r.datum_do, r.ukupan_iznos, r.klijent_id \nFROM smestaj s \nINNER JOIN rezervacija r on s.sifra_smestaja = r.sifra_smestaja\n"
+                    //+ "from smestaj s "
+                    /*+ "inner join rezervacija r on s.sifra_smestaja = r.sifra_smestaja "*/ + dodatni;
+
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            while (resultSet.next()) {
+                Long id = resultSet.getLong("sifra_smestaja");
+                String naziv = resultSet.getString("naziv_smestaja");
+                String usernameVlasnik = resultSet.getString("vlasnik_id");
+                java.util.Date datumOd = new java.util.Date(resultSet.getDate("datum_od").getTime());
+                java.util.Date datumDo = new java.util.Date(resultSet.getDate("datum_do").getTime());
+                double ukupno = resultSet.getDouble("ukupan_iznos");
+                String klijent = resultSet.getString("klijent_id");
+
+                Smestaj s = new Smestaj();
+                s.setSifraSmestaja(id);
+                s = (Smestaj) pronadjiPoId(s);
+
+                Korisnik k1 = new Klijent();
+                k1.setKorisnickoIme(klijent);
+                Klijent k = (Klijent) pronadjiPoId(k1);
+
+                Rezervacija r = new Rezervacija(s, k, datumOd, datumDo, ukupno);
+                rezervacije.add(r);
+            }
+            resultSet.close();
+            statement.close();
+
+            return rezervacije;
+        } catch (Exception ex) {
             throw ex;
         }
     }

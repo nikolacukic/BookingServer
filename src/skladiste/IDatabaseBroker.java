@@ -6,6 +6,7 @@
 package skladiste;
 
 import domain.GeneralEntity;
+import domain.Rezervacija;
 import domain.Smestaj;
 import java.util.List;
 
@@ -23,4 +24,5 @@ public interface IDatabaseBroker {
     public List<Smestaj> vratiSveSmestaje(String kriterijum) throws Exception;
     public GeneralEntity izmeni(GeneralEntity entity) throws Exception;
     public GeneralEntity obrisi(GeneralEntity entity) throws Exception;
+    public List<Rezervacija> vratiSveRezervacije(GeneralEntity entity) throws Exception;
 }

@@ -20,6 +20,8 @@ import so.ocena.KreirajOcenuSO;
 import so.registracija.RegistracijaKSO;
 import so.registracija.RegistracijaVSO;
 import so.rezervacija.KreirajRezervacijuSO;
+import so.rezervacija.ObrisiRezervacijuSO;
+import so.rezervacija.UcitajRezervacijeSO;
 import so.smestaj.IzmeniSmestajSO;
 import so.smestaj.KreirajSmestajSO;
 import so.smestaj.ObrisiSmestajSO;
@@ -101,5 +103,17 @@ public class Kontroler {
         ApstraktnaGenerickaOperacija so = new KreirajOcenuSO();
         so.sablonIzvrsi(o);
         return ((KreirajOcenuSO) so).getOcena();
+    }
+
+    public List<Rezervacija> vratiSveRezervacije(Rezervacija rezervacija) throws Exception{
+        ApstraktnaGenerickaOperacija so = new UcitajRezervacijeSO();
+        so.sablonIzvrsi(rezervacija);
+        return ((UcitajRezervacijeSO) so).getRezervacije();
+    }
+
+    public GeneralEntity obrisiRezervaciju(Rezervacija r) throws Exception {
+        ApstraktnaGenerickaOperacija so = new ObrisiRezervacijuSO();
+        so.sablonIzvrsi(r);
+        return ((ObrisiRezervacijuSO) so).getRezervacija();
     }
 }

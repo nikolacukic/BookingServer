@@ -116,10 +116,17 @@ public class KlijentskaNit extends Thread {
                         odgovor.setStatus(StatusOdgovora.OK);
                         odgovor.setPodaci(nova);
                         break;
-                    /*case Operacije.OPERATION_GET_ALL_PRODUCTS:
-                        List<Product> products = Controler.getInstance().getAllProducts();
-                        odgovor.setStatus(ResponseStatus.OK);
-                        odgovor.setData(products);*/
+                    case Operacije.REZERVACIJA_UCITAVANJE:
+                        List<Rezervacija> rezervacije = Kontroler.getInstance().vratiSveRezervacije((Rezervacija) zahtev.getPodaci());
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(rezervacije);
+                        break;
+                    case Operacije.REZERVACIJA_BRISANJE:
+                        Rezervacija otkaz = (Rezervacija) zahtev.getPodaci();
+                        GeneralEntity otkazana = Kontroler.getInstance().obrisiRezervaciju(otkaz);
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(otkazana);
+                        break;
                 }
 
             } catch (Exception ex) {
