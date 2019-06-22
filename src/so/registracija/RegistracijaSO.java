@@ -6,6 +6,7 @@
 package so.registracija;
 
 import domain.GeneralEntity;
+import domain.Korisnik;
 import domain.VlasnikSmestaja;
 import so.ApstraktnaGenerickaOperacija;
 
@@ -13,40 +14,40 @@ import so.ApstraktnaGenerickaOperacija;
  *
  * @author user
  */
-public class RegistracijaVSO extends ApstraktnaGenerickaOperacija {
+public class RegistracijaSO extends ApstraktnaGenerickaOperacija {
 
-    private GeneralEntity vlasnik;
+    private GeneralEntity korisnik;
 
     @Override
     protected void validacija(Object entity) throws Exception {
-        if (!(entity instanceof VlasnikSmestaja)) {
+        if (!(entity instanceof Korisnik)) {
             throw new Exception("Nevalidan entity parametar!");
         }
-        VlasnikSmestaja v = (VlasnikSmestaja) entity;
+        Korisnik k = (Korisnik) entity;
         //validacija imena i prezimena
-        for (char ch : v.getImePrezime().toCharArray()) {
+        for (char ch : k.getImePrezime().toCharArray()) {
             if (!Character.isAlphabetic(ch) && ch != ' ') {
                 throw new Exception("Ime sme sadrzati samo slova!");
             }
         }
 
         //validacija JMBG-a
-        if (v.getJmbg().length() != 13) {
+        if (k.getJmbg().length() != 13) {
             throw new Exception("JMBG mora imati 13 cifara! Proverite vas JMBG i probajte ponovo!");
         }
-        for (char ch : v.getJmbg().toCharArray()) {
+        for (char ch : k.getJmbg().toCharArray()) {
             if (!Character.isDigit(ch)) {
                 throw new Exception("JMBG sme sadrzati samo cifre!");
             }
         }
 
         //validacija lozinke
-        if (v.getLozinka().length() < 7) {
+        if (k.getLozinka().length() < 7) {
             throw new Exception("Lozinka mora sadrzati minimum 7 karaktera!");
         }
         boolean slovo = false;
         boolean broj = false;
-        for (char ch : v.getLozinka().toCharArray()) {
+        for (char ch : k.getLozinka().toCharArray()) {
             if (!Character.isAlphabetic(ch) && !Character.isDigit(ch)) {
                 throw new Exception("Lozinka moze sadrzati samo slova i brojeve!");
             }
@@ -59,45 +60,45 @@ public class RegistracijaVSO extends ApstraktnaGenerickaOperacija {
             }
 
         }
-        if (!slovo || !broj) {
-            throw new Exception("Lozinka mora sadrzati barem jedno slovo i barem jedan broj!");
-        }
 
         //validacija emaila
-        if (!v.getePosta().contains("@")) {
+        if (!k.getePosta().contains("@")) {
             throw new Exception("E-mail adresa mora sadrzati \"@\" znak!");
         }
 
         //validacija korisnickog imena
-        if (v.getKorisnickoIme().length() < 4) {
+        if (k.getKorisnickoIme().length() < 4) {
             throw new Exception("Korisnicko ime mora biti dugacko minimum 4 karaktera!");
         }
 
-        //validacija broja licne karte
-        for (char ch : v.getBrojLicneKarte().toCharArray()) {
-            if (!Character.isDigit(ch)) {
-                throw new Exception("Broj licne karte sme sadrzati samo cifre!");
-            }
-        }
-        
-        //validacija broja telefona
-        for (int i = 0; i < v.getKontaktTelefon().length(); i++) {
-            if (!Character.isDigit(v.getKontaktTelefon().toCharArray()[i])) {
-                if (v.getKontaktTelefon().toCharArray()[i] == '+' && i == 0) {
-                    continue;
+        if (k instanceof VlasnikSmestaja) {
+            VlasnikSmestaja v = (VlasnikSmestaja) k;
+            //validacija broja licne karte
+            for (char ch : v.getBrojLicneKarte().toCharArray()) {
+                if (!Character.isDigit(ch)) {
+                    throw new Exception("Broj licne karte sme sadrzati samo cifre!");
                 }
-                throw new Exception("Telefon moze sadrzati samo cifre i + na pocetku!");
+            }
+
+            //validacija broja telefona
+            for (int i = 0; i < v.getKontaktTelefon().length(); i++) {
+                if (!Character.isDigit(v.getKontaktTelefon().toCharArray()[i])) {
+                    if (v.getKontaktTelefon().toCharArray()[i] == '+' && i == 0) {
+                        continue;
+                    }
+                    throw new Exception("Telefon moze sadrzati samo cifre i + na pocetku!");
+                }
             }
         }
     }
 
     @Override
     protected void izvrsi(Object entity) throws Exception {
-        vlasnik = broker.registracija((VlasnikSmestaja) entity);
+        korisnik = broker.registracija((Korisnik) entity);
     }
 
-    public GeneralEntity getVlasnik() {
-        return vlasnik;
+    public GeneralEntity getKorisnik() {
+        return korisnik;
     }
 
 }

@@ -59,30 +59,16 @@ public class KlijentskaNit extends Thread {
                 switch (operacija) {
                     case Operacije.LOGIN:
                         Korisnik dataKorisnik = (Korisnik) zahtev.getPodaci();
-                        if (dataKorisnik instanceof Klijent) {
-                            GeneralEntity klijent = Kontroler.getInstance().loginK((Klijent) dataKorisnik);
-                            odgovor.setStatus(StatusOdgovora.OK);
-                            odgovor.setPodaci(klijent);
-                            break;
-                        } else {
-                            GeneralEntity vlasnik = Kontroler.getInstance().loginV((VlasnikSmestaja) dataKorisnik);
-                            odgovor.setStatus(StatusOdgovora.OK);
-                            odgovor.setPodaci(vlasnik);
-                            break;
-                        }
+                        GeneralEntity korisnik = Kontroler.getInstance().login(dataKorisnik);
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(korisnik);
+                        break;
                     case Operacije.REGISTRACIJA:
                         Korisnik novi = (Korisnik) zahtev.getPodaci();
-                        if (novi instanceof Klijent) {
-                            GeneralEntity klijent = Kontroler.getInstance().registrujK((Klijent) novi);
-                            odgovor.setStatus(StatusOdgovora.OK);
-                            odgovor.setPodaci(klijent);
-                            break;
-                        } else {
-                            GeneralEntity vlasnik = Kontroler.getInstance().registrujV((VlasnikSmestaja) novi);
-                            odgovor.setStatus(StatusOdgovora.OK);
-                            odgovor.setPodaci(vlasnik);
-                            break;
-                        }
+                        GeneralEntity klijent = Kontroler.getInstance().registruj((Korisnik) novi);
+                        odgovor.setStatus(StatusOdgovora.OK);
+                        odgovor.setPodaci(klijent);
+                        break;
                     case Operacije.SMESTAJ_KREIRANJE:
                         Smestaj s = (Smestaj) zahtev.getPodaci();
                         GeneralEntity smestaj = Kontroler.getInstance().kreirajSmestaj(s);
@@ -159,5 +145,5 @@ public class KlijentskaNit extends Thread {
             }
         }
     }
-    
+
 }

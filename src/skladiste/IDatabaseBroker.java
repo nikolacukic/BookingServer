@@ -16,7 +16,6 @@ import java.util.List;
  */
 public interface IDatabaseBroker {
     
-    public List<GeneralEntity> vratiSve(GeneralEntity entity) throws Exception;
     public GeneralEntity login(GeneralEntity entity) throws Exception;
     public GeneralEntity registracija(GeneralEntity entity) throws Exception;
     public GeneralEntity kreiraj(GeneralEntity entity) throws Exception;

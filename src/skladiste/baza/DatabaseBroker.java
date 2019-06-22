@@ -31,26 +31,6 @@ import skladiste.baza.konekcija.KonekcijaSaBazom;
 public class DatabaseBroker implements IDatabaseBroker {
 
     @Override
-    public List<GeneralEntity> vratiSve(GeneralEntity entity) throws Exception {
-        List<GeneralEntity> list;
-        try {
-            Connection connection = KonekcijaSaBazom.getInstance().getConnection();
-            System.out.println("Uspostavljena je konekcija na bazu");
-            String query = "SELECT * FROM " + entity.getTableName();
-            System.out.println(query);
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-            list = entity.getList(resultSet);
-            resultSet.close();
-            statement.close();
-            return list;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            throw ex;
-        }
-    }
-
-    @Override
     public GeneralEntity login(GeneralEntity entity) throws Exception {
         GeneralEntity entitet;
         try {
@@ -86,9 +66,9 @@ public class DatabaseBroker implements IDatabaseBroker {
                 case "klijent":
                     Klijent k = (Klijent) entity;
 
-                    ps.setString(1, k.getImePrezime());
-                    ps.setString(2, k.getKorisnickoIme());
-                    ps.setString(3, k.getLozinka());
+                    ps.setString(1, k.getKorisnickoIme());
+                    ps.setString(2, k.getLozinka());
+                    ps.setString(3, k.getImePrezime());
                     ps.setString(4, k.getJmbg());
                     ps.setString(5, k.getePosta());
                     ps.setDouble(6, k.getStanjeNaRacunu());
@@ -98,9 +78,9 @@ public class DatabaseBroker implements IDatabaseBroker {
                 case "vlasnik_smestaja":
                     VlasnikSmestaja v = (VlasnikSmestaja) entity;
 
-                    ps.setString(1, v.getImePrezime());
-                    ps.setString(2, v.getKorisnickoIme());
-                    ps.setString(3, v.getLozinka());
+                    ps.setString(1, v.getKorisnickoIme());
+                    ps.setString(2, v.getLozinka());
+                    ps.setString(3, v.getImePrezime());
                     ps.setString(4, v.getJmbg());
                     ps.setString(5, v.getePosta());
                     ps.setString(6, v.getBrojLicneKarte());
@@ -195,6 +175,7 @@ public class DatabaseBroker implements IDatabaseBroker {
         }
     }
 
+    @Override
     public List<Smestaj> vratiSveSmestaje(String kriterijum) throws Exception {
         List<Smestaj> smestaji = new LinkedList<Smestaj>();
         try {

@@ -6,19 +6,15 @@
 package kontroler;
 
 import domain.GeneralEntity;
-import domain.Klijent;
 import domain.Korisnik;
 import domain.Ocena;
 import domain.Rezervacija;
 import domain.Smestaj;
-import domain.VlasnikSmestaja;
 import java.util.List;
 import so.ApstraktnaGenerickaOperacija;
-import so.login.LoginKSO;
-import so.login.LoginVSO;
+import so.login.LoginSO;
 import so.ocena.KreirajOcenuSO;
-import so.registracija.RegistracijaKSO;
-import so.registracija.RegistracijaVSO;
+import so.registracija.RegistracijaSO;
 import so.rezervacija.KreirajRezervacijuSO;
 import so.rezervacija.ObrisiRezervacijuSO;
 import so.rezervacija.UcitajRezervacijeSO;
@@ -45,28 +41,16 @@ public class Kontroler {
         return instance;
     }
 
-    public GeneralEntity loginK(Korisnik k) throws Exception {
-        ApstraktnaGenerickaOperacija so = new LoginKSO();
+    public GeneralEntity login(Korisnik k) throws Exception {
+        ApstraktnaGenerickaOperacija so = new LoginSO();
         so.sablonIzvrsi(k);
-        return ((LoginKSO) so).getKlijent();
+        return ((LoginSO) so).getKorisnik();
     }
 
-    public GeneralEntity loginV(VlasnikSmestaja v) throws Exception {
-        ApstraktnaGenerickaOperacija so = new LoginVSO();
-        so.sablonIzvrsi(v);
-        return ((LoginVSO) so).getVlasnik();
-    }
-
-    public GeneralEntity registrujK(Klijent k) throws Exception {
-        ApstraktnaGenerickaOperacija so = new RegistracijaKSO();
+    public GeneralEntity registruj(Korisnik k) throws Exception {
+        ApstraktnaGenerickaOperacija so = new RegistracijaSO();
         so.sablonIzvrsi(k);
-        return ((RegistracijaKSO) so).getKlijent();
-    }
-
-    public GeneralEntity registrujV(VlasnikSmestaja v) throws Exception {
-        ApstraktnaGenerickaOperacija so = new RegistracijaVSO();
-        so.sablonIzvrsi(v);
-        return ((RegistracijaVSO) so).getVlasnik();
+        return ((RegistracijaSO) so).getKorisnik();
     }
 
     public GeneralEntity kreirajSmestaj(Smestaj s) throws Exception {

@@ -6,31 +6,29 @@
 package so.login;
 
 import domain.GeneralEntity;
-import domain.Klijent;
+import domain.Korisnik;
 import so.ApstraktnaGenerickaOperacija;
 
 /**
  *
  * @author user
  */
-public class LoginKSO extends ApstraktnaGenerickaOperacija{
-
-    private GeneralEntity klijent;
+public class LoginSO extends ApstraktnaGenerickaOperacija{
+    private GeneralEntity korisnik;
     
     @Override
     protected void validacija(Object entity) throws Exception {
-        if (!(entity instanceof Klijent)) {
+        if (!(entity instanceof Korisnik)) {
             throw new Exception("Nevalidan entity parametar!");
         }
     }
 
     @Override
     protected void izvrsi(Object entity) throws Exception {
-        klijent = broker.login((Klijent) entity);
+        korisnik = broker.login((Korisnik) entity);
     }
 
-    public GeneralEntity getKlijent() {
-        return klijent;
+    public GeneralEntity getKorisnik() {
+        return korisnik;
     }
-   
 }
