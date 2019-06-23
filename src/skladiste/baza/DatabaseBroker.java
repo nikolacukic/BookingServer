@@ -485,7 +485,9 @@ public class DatabaseBroker implements IDatabaseBroker {
                 }
             } else {
                 String lozinka = dobijena.getKlijent().getLozinka();
-                boolean jesteLozinka= lozinka.matches((".*\\d.*"));
+                boolean jesteLozinka = false;
+                if (lozinka!=null)
+                    jesteLozinka= lozinka.matches((".*\\d.*"));
                //DEO KAD KLIJENT POZIVA
                if ((lozinka != null && !jesteLozinka) && dobijena.getDatumOd() != null) {
                     String pattern = "yyyy-MM-dd";
